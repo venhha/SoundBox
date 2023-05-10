@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Music_mp3</string>
+    <string name="app_name">Sound Box</string>
     <!-- TODO: Remove or change this placeholder text -->
     <string name="home_fragment">Hello blank fragment</string>
     <string name="find_fragment">Hello blank fragment</string>

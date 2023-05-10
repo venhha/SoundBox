@@ -1,7 +1,4 @@
-package com.example.testfirebse;
-
-import static android.app.job.JobInfo.PRIORITY_MIN;
-import static com.example.testfirebse.Song.CHANNEL_ID;
+package com.example.soundbox;
 
 import android.app.Notification;
 import android.app.NotificationChannel;
@@ -24,13 +21,6 @@ import android.widget.RemoteViews;
 import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
-
-import com.squareup.picasso.Picasso;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
 
 public class MyService extends Service {
 

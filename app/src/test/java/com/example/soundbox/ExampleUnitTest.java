@@ -1,4 +1,4 @@
-package com.example.testfirebse;
+package com.example.soundbox;
 
 import org.junit.Test;
 

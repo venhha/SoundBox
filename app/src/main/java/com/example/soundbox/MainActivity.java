@@ -1,7 +1,4 @@
-package com.example.testfirebse;
-
-import static com.example.testfirebse.R.color.red;
-import static com.example.testfirebse.R.color.white;
+package com.example.soundbox;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -17,9 +14,7 @@ import android.content.IntentFilter;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.Color;
-import android.media.AudioAttributes;
 import android.media.MediaMetadataRetriever;
-import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
@@ -41,6 +36,8 @@ import android.widget.Toast;
 
 import com.example.jean.jcplayer.model.JcAudio;
 import com.example.jean.jcplayer.view.JcPlayerView;
+import com.example.soundbox.data.SharedPreferenceManager;
+import com.example.soundbox.model.User;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
@@ -72,7 +69,7 @@ public class MainActivity extends AppCompatActivity {
     FirebaseAuth auth;
     private RelativeLayout layoutBottom;
 
-    LinearLayout layoutHome, layoutUpload, layoutUser,layoutClickToLogin, layoutUserTrue;
+    LinearLayout layoutHome, layoutUpload, layoutUser, layoutClickToLogin, layoutUserTrue;
 
     Button buttonTabHome, buttonTabUpload, buttonTabUser;
     TextView textView;
@@ -89,8 +86,8 @@ public class MainActivity extends AppCompatActivity {
     private Song newMusic;
     private boolean isPlaying;
 
-    private ImageView imgMusic, imgPlayOrPause,imgClear;
-    private TextView textViewTitleMusic,textViewSingleMusic;
+    private ImageView imgMusic, imgPlayOrPause, imgClear;
+    private TextView textViewTitleMusic, textViewSingleMusic;
     JcPlayerView jcPlayerView;
     List<JcAudio> jcAudios;
 
@@ -108,7 +105,7 @@ public class MainActivity extends AppCompatActivity {
     ImageView selectImage;
     Button uploadButton;
     ImageButton selectSong;
-    FirebaseUser currentFirebaseUser = FirebaseAuth.getInstance().getCurrentUser() ;
+    FirebaseUser currentFirebaseUser = FirebaseAuth.getInstance().getCurrentUser();
     //end
 
     //Login - register
@@ -127,11 +124,11 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void onReceive(Context context, Intent intent) {
             Bundle bundle = intent.getExtras();
-            if (bundle == null){
+            if (bundle == null) {
                 return;
             }
 
-            newMusic= (Song) bundle.get("object_music");
+            newMusic = (Song) bundle.get("object_music");
             isPlaying = bundle.getBoolean("status_player");
             int actionMusic = bundle.getInt("action_music");
             handleLayoutMusic(actionMusic);
@@ -143,7 +140,6 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
 
 
         clickTabLayout();
@@ -162,7 +158,7 @@ public class MainActivity extends AppCompatActivity {
 
         logOutOncreate();
 
-
+        retrieveInfo();
     }
 
     private void clickTabLayout() {
@@ -194,10 +190,9 @@ public class MainActivity extends AppCompatActivity {
                 setVisibilityLayout();
                 setColorButton();
                 buttonTabUpload.setTextColor(Color.RED);
-                if(isLogin){
+                if (isLogin) {
                     layoutUpload.setVisibility(View.VISIBLE);
-                }
-                else {
+                } else {
                     layoutClickToLogin.setVisibility(View.VISIBLE);
                 }
             }
@@ -211,10 +206,9 @@ public class MainActivity extends AppCompatActivity {
 
                 buttonTabUser.setTextColor(Color.RED);
 
-                if(isLogin){
+                if (isLogin) {
                     layoutUserTrue.setVisibility(View.VISIBLE);
-                }
-                else {
+                } else {
                     layoutUser.setVisibility(View.VISIBLE);
                 }
 
@@ -271,7 +265,6 @@ public class MainActivity extends AppCompatActivity {
         storageReference = storage.getReference();
 
 
-
         selectSongNameEditText = findViewById(R.id.selectSong);
         selectImage = findViewById(R.id.selectImage);
         uploadButton = findViewById(R.id.uploadSongButton);
@@ -293,9 +286,10 @@ public class MainActivity extends AppCompatActivity {
         });
 
     }
-    public void loginOncreate(){
+
+    public void loginOncreate() {
         mAuth = FirebaseAuth.getInstance();
-        editTextEmail =findViewById(R.id.email);
+        editTextEmail = findViewById(R.id.email);
         editTextPassword = findViewById(R.id.password);
         btnLogin = findViewById(R.id.btnLogin);
         progressBar = findViewById(R.id.processBar);
@@ -307,14 +301,14 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 progressBar.setVisibility(View.VISIBLE);
-                String email,password;
+                String email, password;
                 email = String.valueOf(editTextEmail.getText());
                 password = String.valueOf((editTextPassword.getText()));
-                if(TextUtils.isEmpty(email)){
+                if (TextUtils.isEmpty(email)) {
                     Toast.makeText(MainActivity.this, "Enter Email", Toast.LENGTH_SHORT).show();
                     return;
                 }
-                if(TextUtils.isEmpty(password)){
+                if (TextUtils.isEmpty(password)) {
                     Toast.makeText(MainActivity.this, "Enter password", Toast.LENGTH_SHORT).show();
                     return;
                 }
@@ -325,7 +319,7 @@ public class MainActivity extends AppCompatActivity {
                             public void onComplete(@NonNull Task<AuthResult> task) {
                                 progressBar.setVisibility(View.GONE);
                                 if (task.isSuccessful()) {
-                                    Toast.makeText(MainActivity.this,"Login success",
+                                    Toast.makeText(MainActivity.this, "Login success",
                                             Toast.LENGTH_SHORT).show();
 
                                     isLogin = true;
@@ -335,8 +329,10 @@ public class MainActivity extends AppCompatActivity {
                                     layoutUpload.setVisibility(View.VISIBLE);
                                     textViewUserLoginTrue.setText(editTextEmail.getText());
                                     textViewPassLoginTrue.setText(editTextPassword.getText());
+                                    SharedPreferenceManager manager = SharedPreferenceManager.getInstance(getApplicationContext());
+                                    manager.saveUserInfo(email, password);
                                 } else {
-                                    Toast.makeText(MainActivity.this,"Login fail",
+                                    Toast.makeText(MainActivity.this, "Login fail",
                                             Toast.LENGTH_SHORT).show();
                                 }
                             }
@@ -346,14 +342,15 @@ public class MainActivity extends AppCompatActivity {
 
         });
     }
-    public void registerOncreate(){
+
+    public void registerOncreate() {
         mAuth = FirebaseAuth.getInstance();
-        editTextEmail =findViewById(R.id.email);
+        editTextEmail = findViewById(R.id.email);
         editTextPassword = findViewById(R.id.password);
         btnReg = findViewById(R.id.btnRegister);
         progressBar = findViewById(R.id.processBar);
         mAuth = FirebaseAuth.getInstance();
-        editTextEmail =findViewById(R.id.email);
+        editTextEmail = findViewById(R.id.email);
         editTextPassword = findViewById(R.id.password);
         progressBar = findViewById(R.id.processBar);
 
@@ -362,14 +359,14 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 progressBar.setVisibility(View.VISIBLE);
-                String email,password;
+                String email, password;
                 email = String.valueOf(editTextEmail.getText());
                 password = String.valueOf((editTextPassword.getText()));
-                if(TextUtils.isEmpty(email)){
+                if (TextUtils.isEmpty(email)) {
                     Toast.makeText(MainActivity.this, "Enter Email", Toast.LENGTH_SHORT).show();
                     return;
                 }
-                if(TextUtils.isEmpty(password)){
+                if (TextUtils.isEmpty(password)) {
                     Toast.makeText(MainActivity.this, "Enter password", Toast.LENGTH_SHORT).show();
                     return;
                 }
@@ -381,10 +378,10 @@ public class MainActivity extends AppCompatActivity {
                                 progressBar.setVisibility(View.GONE);
                                 if (task.isSuccessful()) {
 
-                                    Toast.makeText(MainActivity.this,"Account created. Click Login to upload file",
+                                    Toast.makeText(MainActivity.this, "Account created. Click Login to upload file",
                                             Toast.LENGTH_SHORT).show();
-                                } else{
-                                    Toast.makeText(MainActivity.this,"Account fail",
+                                } else {
+                                    Toast.makeText(MainActivity.this, "Account fail",
                                             Toast.LENGTH_SHORT).show();
                                 }
                             }
@@ -394,18 +391,22 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    public void logOutOncreate(){
+    public void logOutOncreate() {
         logOutButton = findViewById(R.id.btnLogout);
+        SharedPreferenceManager manager = SharedPreferenceManager.getInstance(this.getApplicationContext());
+
         logOutButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 isLogin = false;
+                manager.logOut();
                 setVisibilityLayout();
                 layoutUser.setVisibility(View.VISIBLE);
             }
         });
     }
-    public void setVisibilityLayout(){
+
+    public void setVisibilityLayout() {
         layoutUserTrue.setVisibility(View.GONE);
         layoutHome.setVisibility(View.GONE);
         layoutUser.setVisibility(View.GONE);
@@ -445,6 +446,7 @@ public class MainActivity extends AppCompatActivity {
                 adapter.notifyDataSetChanged();
                 progressDialog.dismiss();
             }
+
             @Override
             public void onCancelled(@NonNull DatabaseError error) {
                 Toast.makeText(MainActivity.this, "FAILED!", Toast.LENGTH_SHORT).show();
@@ -452,8 +454,8 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    private void handleLayoutMusic(int action){
-        switch (action){
+    private void handleLayoutMusic(int action) {
+        switch (action) {
             case MyService.ACTION_START:
                 layoutBottom.setVisibility(View.VISIBLE);
                 showInforMusic();
@@ -479,8 +481,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-    private void showInforMusic(){
-        if (newMusic == null){
+    private void showInforMusic() {
+        if (newMusic == null) {
             return;
         }
         textViewTitleMusic.setText(newMusic.getSongName());
@@ -489,9 +491,9 @@ public class MainActivity extends AppCompatActivity {
         imgPlayOrPause.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (isPlaying){
+                if (isPlaying) {
                     sendActionToService(MyService.ACTION_PAUSE);
-                }else {
+                } else {
                     sendActionToService(MyService.ACTION_RESUME);
                 }
             }
@@ -505,17 +507,17 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    private void setStartusButtonPlayOrPause(){
-        if (isPlaying){
+    private void setStartusButtonPlayOrPause() {
+        if (isPlaying) {
             imgPlayOrPause.setImageResource(R.drawable.ic_pause_20);
-        }else {
-            imgPlayOrPause.setImageResource(R.drawable.ic_play_20 );
+        } else {
+            imgPlayOrPause.setImageResource(R.drawable.ic_play_20);
         }
     }
 
-    private void sendActionToService(int action){
+    private void sendActionToService(int action) {
         Intent intent = new Intent(this, MyService.class);
-        intent.putExtra("action_music_service",action);
+        intent.putExtra("action_music_service", action);
         startService(intent);
 
     }
@@ -523,12 +525,13 @@ public class MainActivity extends AppCompatActivity {
     private void pickSong() {
         Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
         intent.setType("audio/*");
-        startActivityForResult(intent,1);
+        startActivityForResult(intent, 1);
     }
-    private void  pickImage(){
+
+    private void pickImage() {
         Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
         intent.setType("image/*");
-        startActivityForResult(intent,2);
+        startActivityForResult(intent, 2);
     }
 
     @Override
@@ -543,14 +546,14 @@ public class MainActivity extends AppCompatActivity {
                 songLength = getSongDuration(uriSong);
                 //Log.i("duration", songLength);
             }
-            if (requestCode == 2 && resultCode == RESULT_OK){
+            if (requestCode == 2 && resultCode == RESULT_OK) {
 //                Log.i("image",data.toString());
                 image = data.getData();
                 try {
-                    Bitmap bitmap = MediaStore.Images.Media.getBitmap(this.getContentResolver(),image);
+                    Bitmap bitmap = MediaStore.Images.Media.getBitmap(this.getContentResolver(), image);
                     selectImage.setImageBitmap(bitmap);
                     ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-                    bitmap.compress(Bitmap.CompressFormat.JPEG,100,byteArrayOutputStream);
+                    bitmap.compress(Bitmap.CompressFormat.JPEG, 100, byteArrayOutputStream);
                     bytes = byteArrayOutputStream.toByteArray();
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -558,6 +561,7 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     }
+
     @SuppressLint("Range")
     public String getFileName(Uri uri) {
         String result = null;
@@ -579,21 +583,22 @@ public class MainActivity extends AppCompatActivity {
         return result;
     }
 
-    public String getSongDuration(Uri song){
+    public String getSongDuration(Uri song) {
         MediaMetadataRetriever mediaMetadataRetriever = new MediaMetadataRetriever();
-        mediaMetadataRetriever.setDataSource(getApplicationContext(),song);
+        mediaMetadataRetriever.setDataSource(getApplicationContext(), song);
         String durationString = mediaMetadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION);
         long time = Long.parseLong(durationString);
         int minutes = (int) TimeUnit.MILLISECONDS.toMinutes(time);
         int totalSeconds = (int) TimeUnit.MILLISECONDS.toSeconds(time);
-        int seconds = totalSeconds-(minutes*60);
-        if (String.valueOf(seconds).length() == 1){
+        int seconds = totalSeconds - (minutes * 60);
+        if (String.valueOf(seconds).length() == 1) {
             return minutes + ":0" + seconds;
-        }else {
+        } else {
             return minutes + ":" + seconds;
         }
     }
-    public void upload(View view){
+
+    public void upload(View view) {
 //        if (uriSong == null){
 //            Toast.makeText(this, "Please select a song", Toast.LENGTH_SHORT).show();
 //        }
@@ -609,17 +614,18 @@ public class MainActivity extends AppCompatActivity {
 //        else {
         fileName = selectSongNameEditText.getText().toString();
         String artist = artistName.getText().toString();
-        uploadImageToServer(bytes,fileName);
-        uploadFileToServer(uriSong,fileName,artist,songLength);
+        uploadImageToServer(bytes, fileName);
+        uploadFileToServer(uriSong, fileName, artist, songLength);
         //}
     }
+
     public void uploadImageToServer(byte[] image, String fileName) {
-        UploadTask uploadTask = storageReference.child("images/"+ UUID.randomUUID().toString()).putBytes(image);
+        UploadTask uploadTask = storageReference.child("images/" + UUID.randomUUID().toString()).putBytes(image);
         uploadTask.addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
             @Override
             public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
                 Task<Uri> task = taskSnapshot.getStorage().getDownloadUrl();
-                while (!task.isComplete());
+                while (!task.isComplete()) ;
                 Uri urlsong = task.getResult();
                 imageUrl = urlsong.toString();
 //                Log.i("image url", imageUrl);
@@ -631,7 +637,8 @@ public class MainActivity extends AppCompatActivity {
             }
         });
     }
-    public void uploadFileToServer(Uri uri, final String songName, final String artist, final String duration){
+
+    public void uploadFileToServer(Uri uri, final String songName, final String artist, final String duration) {
         StorageReference filePath = storageReference.child("Audios").child(songName);
         progressDialog.show();
         filePath.putFile(uri).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
@@ -639,19 +646,19 @@ public class MainActivity extends AppCompatActivity {
             public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
 //                Log.i("success", "upload");
                 Task<Uri> uriTask = taskSnapshot.getStorage().getDownloadUrl();
-                while (!uriTask.isComplete());
+                while (!uriTask.isComplete()) ;
                 Uri urlSong = uriTask.getResult();
                 songUrl = urlSong.toString();
 
                 Log.i("success url ", songUrl);
-                uploadDetailsToDatabase(fileName,songUrl,imageUrl,artist,duration,currentFirebaseUser.getUid());
+                uploadDetailsToDatabase(fileName, songUrl, imageUrl, artist, duration, currentFirebaseUser.getUid());
                 progressDialog.dismiss();
             }
 
         }).addOnProgressListener(new OnProgressListener<UploadTask.TaskSnapshot>() {
             @Override
             public void onProgress(@NonNull UploadTask.TaskSnapshot taskSnapshot) {
-                double progress = (100.0*taskSnapshot.getBytesTransferred())/taskSnapshot.getTotalByteCount();
+                double progress = (100.0 * taskSnapshot.getBytesTransferred()) / taskSnapshot.getTotalByteCount();
                 int currentProgress = (int) progress;
                 progressDialog.setMessage("Uploading: " + currentProgress + "%");
             }
@@ -664,8 +671,9 @@ public class MainActivity extends AppCompatActivity {
             }
         });
     }
-    public void uploadDetailsToDatabase(String songName, String songUrl, String imageUrl, String artistName, String songDuration,String idArtist){
-        Song song = new Song(songName,songUrl,imageUrl,artistName,songDuration,idArtist);
+
+    public void uploadDetailsToDatabase(String songName, String songUrl, String imageUrl, String artistName, String songDuration, String idArtist) {
+        Song song = new Song(songName, songUrl, imageUrl, artistName, songDuration, idArtist);
         FirebaseDatabase.getInstance().getReference("Songs")
                 .push().setValue(song).addOnCompleteListener(new OnCompleteListener<Void>() {
                     @Override
@@ -682,6 +690,23 @@ public class MainActivity extends AppCompatActivity {
                     }
                 });
 
+    }
+
+    private void retrieveInfo() {
+        try {
+            SharedPreferenceManager manager = SharedPreferenceManager.getInstance(this.getApplicationContext());
+            if (manager.isLoggedIn()) {
+                User user = manager.getUserInfo();
+                mAuth.signInWithEmailAndPassword(user.getEmail(), user.getPassword());
+                isLogin = true;
+                textViewUserLoginTrue.setText(manager.getUserInfo().getEmail());
+                textViewPassLoginTrue.setText(manager.getUserInfo().getPassword());
+                Toast.makeText(this, "Login with email " + manager.getUserInfo().getEmail(), Toast.LENGTH_SHORT).show();
+            }
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+            Toast.makeText(this, "Retrieve User Info FAILED", Toast.LENGTH_SHORT).show();
+        }
     }
 
 }

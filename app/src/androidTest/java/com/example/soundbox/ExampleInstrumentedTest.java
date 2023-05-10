@@ -1,4 +1,4 @@
-package com.example.testfirebse;
+package com.example.soundbox;
 
 import android.content.Context;
 
@@ -21,6 +21,6 @@ public class ExampleInstrumentedTest {
     public void useAppContext() {
         // Context of the app under test.
         Context appContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
-        assertEquals("com.example.testfirebse", appContext.getPackageName());
+        assertEquals("com.example.soundbox", appContext.getPackageName());
     }
 }
